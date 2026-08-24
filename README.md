@@ -26,9 +26,13 @@ each server needs its own Railway/Render/Fly service.
    - `BOXZOOKA_API_TOKEN` = your sandbox token
      (`c44f966f5c7fc4cdb7d7f461ab4414c6`)
    - `BOXZOOKA_CUSTOMER_ID` = `242`
-   - Optional: `BOXZOOKA_API_BASE_URL` — only needed once Boxzooka gives
-     you a live/production URL to replace the sandbox
-     (`https://sandbox.boxzooka.com`, the default).
+   - `BOXZOOKA_API_BASE_URL` = `https://api.boxzooka.com` for **production**
+     (live warehouse data). If omitted, defaults to the sandbox
+     (`https://sandbox.boxzooka.com`), which is static test data and will
+     NOT reflect live shipments — set the production URL for real numbers.
+     Note: production may require a different token/customer ID than
+     sandbox; if calls return 401 after switching, get live credentials
+     from Boxzooka.
 4. Railway gives you a public URL, e.g.
    `https://boxzooka-production-xxxx.up.railway.app`.
 5. The connector URL to give your team is that URL **plus `/mcp`**:

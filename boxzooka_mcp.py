@@ -1378,6 +1378,60 @@ async def boxzooka_cancel_return(params: CancelReturnInput) -> str:
 
 
 # ---------------------------------------------------------------------------
+# Diagnostics
+# ---------------------------------------------------------------------------
+
+
+@mcp.tool(
+    name="boxzooka_diagnostics",
+    annotations={
+        "title": "Diagnostics — config & upstream health",
+        "readOnlyHint": True,
+        "destructiveHint": False,
+        "idempotentHint": True,
+        "openWorldHint": True,
+    },
+)
+async def boxzooka_diagnostics() -> str:
+    """Report the running server's live config and upstream reachability, so
+    an outage can be diagnosed in one call. Never returns the token value —
+    only whether it is set, and which environment the base URL points at.
+
+    Returns:
+        str: JSON with base_url, environment (production/sandbox/custom),
+        token_present, customer_id_present, transport, and a live upstream
+        probe. If a tool call returns a raw transport-level "Not Found", the
+        container itself isn't serving — this tool won't even run.
+    """
+    env = (
+        "production" if "api.boxzooka.com" in API_BASE_URL
+        else "sandbox" if "sandbox.boxzooka.com" in API_BASE_URL
+        else "custom"
+    )
+    info: Dict[str, Any] = {
+        "server": "boxzooka_mcp",
+        "base_url": API_BASE_URL,
+        "environment": env,
+        "token_present": bool(API_TOKEN),
+        "customer_id_present": bool(CUSTOMER_ID),
+        "transport": os.environ.get("MCP_TRANSPORT", "stdio"),
+    }
+    try:
+        headers: Dict[str, str] = {}
+        if API_TOKEN and CUSTOMER_ID:
+            headers = {"token": API_TOKEN, "customer": CUSTOMER_ID, "Content-Type": "application/json"}
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            r = await client.get(f"{API_BASE_URL}/v2/inventory", headers=headers)
+        info["upstream_reachable"] = True
+        info["upstream_status"] = r.status_code
+        info["upstream_ok"] = r.status_code < 400
+    except Exception as e:
+        info["upstream_reachable"] = False
+        info["upstream_error"] = f"{type(e).__name__}: {e}"
+    return _json(info)
+
+
+# ---------------------------------------------------------------------------
 # Entrypoint
 # ---------------------------------------------------------------------------
 

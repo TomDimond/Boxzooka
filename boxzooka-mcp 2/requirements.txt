@@ -1,6 +1,0 @@
-# Pinned to versions verified to boot cleanly (Aug 2026).
-# Do NOT loosen to >= without testing — a newer mcp release can change the
-# FastMCP(...) args or run(transport=...) call and crash the container on rebuild.
-mcp[cli]==1.28.1
-httpx==0.28.1
-pydantic==2.13.4
